@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling>=1.26,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "structured-outputs"
+version = "0.1.0"
+description = "Extraction d'informations structurées depuis du texte avec un LLM et Pydantic."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2,<3"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.9,<1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/structured_outputs"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
