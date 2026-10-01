@@ -9,4 +9,4 @@ build/
 .env
 .env.*
 !.env.example
-artifacts/*.json
+artifacts/

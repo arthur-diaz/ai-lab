@@ -1,25 +1,27 @@
 # Structured outputs
 
-Statut : **Work in progress**.
+Mini-projet terminé : extraire des informations depuis du texte avec OpenAI
+Structured Outputs, les valider avec Pydantic et évaluer leur justesse sur des
+datasets synthétiques. Une structure valide ne garantit pas des valeurs exactes.
 
-Objectif : extraire des informations structurées depuis du texte avec un LLM
-et Pydantic. Le modèle `CandidateProfile`, disponible dans
-`structured_outputs.models`, valide et normalise les informations d'un candidat.
-`CandidateExtractor` transforme un texte en profil avec le SDK OpenAI officiel.
+Stack : Python 3.12, uv, SDK OpenAI officiel, Pydantic v2, pytest et Ruff.
+Le projet démontre le design de schéma, le parsing structuré natif, la validation,
+les retries SDK, l'évaluation strict/normalized, l'analyse d'erreurs, les latences
+et tokens, avec une suite de tests offline.
 
-Stack : Python 3.12, uv, Pydantic v2, SDK OpenAI, pytest et Ruff.
+## Résultats
 
-## Results
+| Expérience | Exemples | Normalized profile exact match | Skills macro F1 |
+|---|---:|---:|---:|
+| Development V1 | 15 | 86,67 % | 98,67 % |
+| Development V2 | 15 | 100 % | 100 % |
+| Holdout V2 | 25 | 92 % | 100 % |
 
-- Development V2 normalized profile exact match : **100 %** (15 exemples).
-- Holdout V2 normalized profile exact match : **92 %** (25 exemples).
-- Holdout V2 skills macro F1 : **100 %**.
-
-Le development set a servi à améliorer le prompt : son score n'est pas une
-estimation indépendante. Le holdout fournit une estimation plus honnête, avec
-les limites d'un petit jeu synthétique et d'une seule exécution.
-Voir le [rapport expérimental](docs/experiment_report.md) pour le protocole,
-la comparaison V1/V2, les erreurs et les trade-offs.
+V2 a été optimisée sur le development set : son 100 % n'est pas une estimation
+indépendante. Le premier passage sur le holdout est la mesure indépendante la
+plus pertinente ici. Ces résultats ne signifient pas que le système est
+« 100 % précis ». Voir le [rapport expérimental](docs/experiment_report.md)
+pour le protocole, les scores stricts, les erreurs et les trade-offs.
 
 ## Installation
 
@@ -27,226 +29,133 @@ Avec uv installé, depuis la racine de `ai-lab` :
 
 ```powershell
 cd 01_structured_outputs
-uv sync
+uv sync --locked
 ```
 
-Le fichier `uv.lock` fixe les versions des dépendances.
+`.python-version` sélectionne Python 3.12 et `uv.lock` fixe les dépendances.
+Le package est installé depuis `src/`. Aucune clé API n'est nécessaire pour
+l'installation, les tests ou les modes protégés.
 
-## Extraction en Python
+## Configuration
 
-Définir les variables dans l'environnement du processus (`.env.example` sert de
-modèle ; aucun fichier `.env` n'est chargé automatiquement) :
+Copier le modèle sans secret, puis renseigner la clé uniquement localement :
 
-- `OPENAI_API_KEY` : obligatoire pour créer un vrai client.
-- `OPENAI_MODEL` : `gpt-4o-mini` par défaut.
-- `OPENAI_MAX_RETRIES` : `2` par défaut, nombre de retries après l'appel initial.
-- `OPENAI_TIMEOUT_SECONDS` : `30` par défaut, timeout du SDK par tentative,
-  pas une limite sur la durée totale de l'extraction.
-
-```python
-from structured_outputs import CandidateExtractor, ExtractionError
-from structured_outputs.config import AppConfig
-
-config = AppConfig.from_env()
-with config.create_client() as client:
-    extractor = CandidateExtractor(client=client, config=config)
-    try:
-        result = extractor.extract("Marie Dupont, développeuse Python à Lyon.")
-        print(result.profile.model_dump())
-    except ExtractionError as error:
-        print(error.kind, str(error))
+```powershell
+Copy-Item .env.example .env
 ```
 
-L'extraction utilise `responses.parse` et `CandidateProfile` comme schéma
-Pydantic, selon la [documentation officielle OpenAI](https://developers.openai.com/api/docs/guides/structured-outputs).
-Le prompt demande uniquement les informations explicites : les valeurs inconnues
-restent `None`, et les compétences inconnues une liste vide.
+Ne pas écraser un `.env` existant. Variables disponibles :
 
-Le client est injectable. Les retries sont exclusivement gérés par le SDK,
-avec les paramètres de `AppConfig` appliqués au client injecté. Les erreurs
-`ExtractionError` distinguent `provider` et `structured_output`, en conservant
-l'exception d'origine comme cause. Le SDK décide seul des erreurs à rejouer.
-Un texte vide provoque un `ValueError` local, sans appel API.
+| Variable | Valeur par défaut / rôle |
+|---|---|
+| `OPENAI_API_KEY` | Obligatoire pour construire un vrai client |
+| `OPENAI_MODEL` | `gpt-4o-mini` |
+| `OPENAI_MAX_RETRIES` | `2` retries SDK après l'appel initial |
+| `OPENAI_TIMEOUT_SECONDS` | `30`, timeout par tentative, pas durée totale |
 
-Le résultat contient le modèle retourné, la latence de l'appel (retries inclus),
-les tokens si disponibles, et un coût estimé laissé à `None`.
-Les tests utilisent des clients et transports simulés, sans réseau.
-Une CLI de benchmark manuel est disponible (voir ci-dessous).
+`AppConfig.from_env()` lit l'environnement du processus. Le package ne charge
+pas automatiquement `.env` ; les commandes réelles ci-dessous le chargent avec
+`uv --env-file`. `.env` et `artifacts/` restent locaux et ignorés par Git.
 
-## Dataset synthétique
+## CLI
 
-Les fichiers `data/raw/candidates.jsonl` et
-`data/expected/candidates_expected.jsonl` contiennent 15 profils fictifs,
-associés par des ids stables. Les métriques permettent de comparer des profils,
-mais le LLM n'est pas encore exécuté automatiquement sur ce dataset.
-
-Les annotations distinguent compétences maîtrisées et simplement mentionnées,
-salaire annuel cible et salaire actuel, résidence du candidat et adresse de
-l'entreprise. Les informations absentes, inconnues ou indécidables restent
-`null` (ou `[]` pour les compétences). Les intitulés reprennent le texte,
-y compris le poste recherché lorsqu'il est explicitement indiqué.
-
-```python
-from structured_outputs.dataset import load_evaluation_dataset
-
-examples = load_evaluation_dataset()
-print(examples[0].id, examples[0].expected)
-```
-
-Le loader conserve l'ordre du fichier brut et ignore les lignes blanches.
-Ses chemins par défaut ciblent les données du projet depuis le module, sans
-dépendre du répertoire courant. Pour une installation sans le dossier `data/`,
-fournir explicitement `raw_path` et `expected_path`.
-
-## Métriques d'évaluation
-
-`evaluate_profile(predicted, expected)` compare les profils déjà normalisés :
-
-- Les six champs scalaires utilisent un exact match, sensible à la casse pour
-  les textes. Deux `None` correspondent ; un seul `None` ne correspond pas.
-- Les nombres acceptent des tolérances absolues inclusives via `years_tolerance`
-  et `salary_tolerance`, nulles par défaut, finies et positives ou nulles.
-- Les skills sont des ensembles comparés sans casse ni prise en compte de
-  l'ordre : précision = TP / prédictions, rappel = TP / attendus,
-  F1 = 2 TP / (nombre de prédictions + nombre d'attendus).
-  Deux ensembles vides obtiennent 1 pour les trois scores ; un seul ensemble
-  vide obtient 0 pour les trois scores.
-- Le skills exact match exige des ensembles identiques. Le profile exact match
-  exige les six scalaires corrects selon les tolérances et le skills exact match.
-
-`evaluate_dataset(pairs)` accepte des couples `(predicted, expected)` sans accès
-aux fichiers. Il retourne l'accuracy par champ, l'overall field accuracy
-(comparaisons correctes / nombre de comparaisons sur les six scalaires, sans
-skills), les skills macro precision / recall / F1 (moyennes par candidat),
-et les accuracies de skills exact match et de profile exact match.
-Un ensemble de couples vide provoque un `ValueError`.
-
-```python
-from structured_outputs import CandidateProfile, evaluate_dataset, evaluate_profile
-
-expected = CandidateProfile(skills=["Python", "SQL"])
-predicted = CandidateProfile(skills=["python"])
-score = evaluate_profile(predicted, expected)
-summary = evaluate_dataset([(predicted, expected)])
-print(score.skills_f1, summary.overall_field_accuracy)
-```
-
-## Benchmark runner
-
-Le flux `dataset -> extraction -> evaluation -> benchmark` reste séparé :
-le loader fournit les exemples, l'extractor produit les profils et métadonnées,
-l'évaluateur mesure la qualité et `run_benchmark(examples, extractor)` orchestre
-le tout. Le runner reçoit un extractor explicitement injecté et ne crée aucun
-client. Il conserve l'ordre des exemples et utilise les métriques existantes
-avec leurs tolérances nulles par défaut.
-
-Le résultat Python contient les résultats individuels et l'évaluation globale.
-Les latences totale et moyenne proviennent des latences d'extraction, retries
-SDK inclus, sans compter le scoring. Les tokens connus sont sommés séparément
-en entrée et en sortie ; un total vaut `None` si aucune valeur n'est disponible.
-En cas de données manquantes, ces totaux sont donc partiels. Le modèle est une
-chaîne s'il est unique, sinon un tuple des modèles distincts dans l'ordre rencontré.
-
-Le runner s'arrête à la première erreur, qu'il propage sans résultat partiel ni
-retry supplémentaire. Un dataset vide provoque un `ValueError`.
-Les tests utilisent un faux extractor, entièrement offline. Aucun benchmark
-réel n'est lancé automatiquement ; son déclenchement manuel reste à l'utilisateur
-après revue. Aucun coût n'est calculé.
-
-## CLI et rapport JSON
-
-Depuis `01_structured_outputs`, le mode protégé termine avec succès sans créer
-de client ni lire la configuration, même si une clé API est présente :
+Modes protégés, sans client ni appel API, même si une clé est présente :
 
 ```powershell
 uv run python -m structured_outputs.cli benchmark
-```
-
-Pour lancer manuellement un vrai benchmark après avoir configuré les variables
-`OPENAI_*` dans l'environnement :
-
-```powershell
-uv run python -m structured_outputs.cli benchmark --run-api --output artifacts/baseline.json
-```
-
-Cette deuxième commande effectue de vrais appels OpenAI et peut consommer des
-crédits API. Aucun benchmark réel n'est déclenché automatiquement ni par les tests.
-Une clé absente ou un échec interrompt la commande avec un code non nul.
-
-La console affiche un résumé et uniquement les ids/champs en désaccord.
-`--output` est facultatif : après un benchmark réussi, il écrit un rapport UTF-8
-avec date UTC, modèles observés, métriques globales, latences, tokens et résultats
-individuels (profils, correspondances et scores). Les répertoires parents sont
-créés si nécessaire ; un fichier existant au même chemin est remplacé.
-Les rapports `artifacts/*.json` sont ignorés par Git. En mode protégé, aucun
-rapport n'est écrit. Les tests restent entièrement offline.
-
-## Development dataset et Holdout dataset
-
-Le **development set** contient les 15 exemples historiques. Leurs erreurs ont
-servi à améliorer le prompt : les scores V2 sur ce jeu ne sont donc plus une
-estimation indépendante de généralisation. Il reste le dataset par défaut
-(`--dataset development`).
-
-Le **holdout set** contient 25 nouveaux exemples synthétiques dans
-`data/holdout/raw/` et `data/holdout/expected/`, avec des ids `holdout_001` à
-`holdout_025` et aucun candidat partagé. Il varie les métiers, séniorités,
-contrats, compétences attribuées ou exclues, durées, salaires et résidences.
-Les informations absentes ou indécidables restent `null`. Les valeurs sont
-explicites ; aucune conversion de tarif journalier en salaire n'est effectuée.
-
-Convention d'annotation : si un poste actuel et un poste futur recherché sont
-tous deux nommés, `job_title` retient le poste actuel. Si seul le poste recherché
-est fourni, cet intitulé est retenu, comme dans le development set. Le schéma
-et le prompt V2 ne fixent pas explicitement cette priorité ; cette convention
-est documentée pour rendre le cas `holdout_004` interprétable, sans changer V2.
-
-Le holdout n'a pas servi à ajuster le prompt avant son premier benchmark.
-La V2 est gelée pendant sa préparation : cette séparation limite le risque
-d'overfitting au benchmark. Après analyse et ajustement sur ce holdout, il ne
-devra plus être présenté comme un test indépendant.
-
-Mode protégé, sans appel API :
-
-```powershell
 uv run python -m structured_outputs.cli benchmark --dataset holdout
 ```
 
-Premier benchmark holdout, à lancer manuellement après revue uniquement :
+Benchmarks réels, à déclencher manuellement uniquement. Ils effectuent des appels
+OpenAI et peuvent consommer des crédits API :
 
 ```powershell
-uv run --env-file .env python -m structured_outputs.cli benchmark --dataset holdout --run-api --output artifacts/holdout_v2.json
+uv run --env-file .env python -m structured_outputs.cli benchmark --dataset development --run-api --output artifacts/development_reproduction.json
+uv run --env-file .env python -m structured_outputs.cli benchmark --dataset holdout --run-api --output artifacts/holdout_reproduction.json
 ```
 
-Cette commande charge `.env` via uv et effectue de vrais appels OpenAI qui peuvent
-consommer des crédits API. Aucun passage réel sur le holdout n'a été lancé lors
-de sa préparation. Le loader existant est réutilisé avec des chemins personnalisés.
+`development` est le dataset par défaut. `--output` est facultatif ; il crée les
+répertoires parents et remplace le fichier choisi s'il existe. Utiliser un nouveau
+nom pour préserver les rapports historiques. La console affiche un résumé et
+uniquement les ids/champs en désaccord. Le JSON contient une date UTC, les modèles,
+scores globaux, profils attendus/prédits et métadonnées individuelles.
 
-## Développement
+La première erreur interrompt le benchmark avec un code non nul, sans rapport
+complet ; aucun retry supplémentaire n'est ajouté par le runner. Un jeu vide
+est rejeté. Les latences sont celles de l'extraction, retries SDK inclus. Les
+tokens connus sont sommés ; le total vaut `None` si aucune valeur n'est connue
+et peut être partiel sinon. Aucun prix en dollars n'est calculé.
 
-Les scores stricts restent disponibles sans changement. Une seconde vue compare
-uniquement `name`, `job_title` et `location` avec `strip().casefold()` : aucune
-équivalence de métier, synonymie ou comparaison floue. La console et le JSON
-incluent aussi la normalized scalar field accuracy (six scalaires, seuls ces
-trois textes changent de comparaison) et le normalized profile exact match.
-Les contrats, nombres (avec les tolérances existantes) et skills gardent leurs règles.
+## Datasets et métriques
 
-Pour rescoring offline d'un rapport historique, sans API et sans écraser la source :
+- **Development** : 15 profils fictifs sous `data/raw/` et `data/expected/`,
+  utilisés pour analyser les erreurs et améliorer le prompt.
+- **Holdout** : 25 profils fictifs inédits sous `data/holdout/`, jamais utilisés
+  pour ajuster le prompt avant leur premier benchmark. Après tout ajustement
+  fondé sur ce jeu, il faudra un autre test indépendant.
+
+Les fichiers JSONL sont associés par id. Les informations absentes restent
+`None` (`[]` pour les compétences). Le loader détecte les ids invalides,
+doublons, lignes invalides et profils incompatibles. Ses chemins par défaut sont
+indépendants du répertoire courant ; une installation sans `data/` doit fournir
+des chemins personnalisés.
+
+`evaluate_profile(predicted, expected)` et `evaluate_dataset(pairs)` séparent :
+
+- **Scalaires stricts** : valeurs validées comparées exactement, `None == None`
+  correct ; tolérances numériques absolues inclusives, nulles par défaut.
+- **Scalaires normalisés** : `strip().casefold()` seulement pour nom, poste et
+  localisation, sans fuzzy matching ni synonymes. Les scores stricts restent disponibles.
+- **Skills** : ensembles sans casse ni ordre, précision/rappel/F1 macro par
+  candidat et exact match. Deux ensembles vides donnent 1 ; un seul vide donne 0.
+- **Profile exact match** : les six scalaires et l'ensemble des skills doivent
+  correspondre, selon la vue stricte ou normalisée. L'overall field accuracy
+  porte uniquement sur les six scalaires.
+
+Le recalcul d'un rapport historique est possible sans API et sans écraser la source :
 
 ```powershell
-uv run python -c "from pathlib import Path; from structured_outputs.cli import rescore_report; rescore_report(Path('artifacts/baseline.json'), Path('artifacts/baseline_normalized.json'))"
+uv run python -c "from pathlib import Path; from structured_outputs.cli import rescore_report; rescore_report(Path('artifacts/baseline.json'), Path('artifacts/baseline_rescored.json'))"
 ```
 
-Cette fonction utilise les profils sauvegardés avec les tolérances nulles par
-défaut, conserve date historique, latences et tokens, et ajoute une date UTC
-`rescored_at`. Les nouvelles métriques ne dépendent pas du prompt courant.
+Il réutilise les prédictions enregistrées, conserve les latences/tokens et ajoute
+`rescored_at`, avec les tolérances par défaut.
 
-Depuis le dossier `01_structured_outputs` :
+## Architecture
+
+| Module | Responsabilité |
+|---|---|
+| `models.py` | `CandidateProfile`, validation et normalisation métier |
+| `config.py` | Variables OpenAI et construction explicite du client |
+| `extractor.py` | `responses.parse`, erreurs applicatives et métadonnées |
+| `dataset.py` | Chargement et association des JSONL |
+| `evaluation.py` | Scoring individuel et agrégation |
+| `benchmark.py` | Orchestration séquentielle avec extractor injectable |
+| `cli.py` | Protection API, assemblage, console et rapports |
+
+## Tests et qualité
 
 ```powershell
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
+uv run python -c "import structured_outputs; print(structured_outputs.__name__)"
 ```
 
-Pour appliquer le formatage : `uv run ruff format .`.
+Les 168 tests utilisent des fakes, mocks et un transport HTTP simulé : aucun
+appel API réel. Pour appliquer le formatage : `uv run ruff format .`.
+
+## Limites et Future improvements
+
+Les jeux sont petits et synthétiques, avec une exécution par expérience. Les
+scores et différences de latence sont descriptifs, sans preuve de significativité.
+Le protocole est reproductible, mais les sorties peuvent varier et l'alias du
+modèle n'est pas un snapshot figé. Pydantic ne détecte pas une inférence sémantique
+non supportée, comme un contrat inventé.
+
+La priorité entre poste actuel et recherché n'est pas fixée par `job_title` :
+le ground truth de `holdout_004` retient le poste actuel. Cette convention et
+son ambiguïté sont décrites dans le rapport, sans changer le holdout après coup.
+Pour une version future : clarifier ce contrat métier, prévoir un nouveau test
+indépendant et renforcer la traçabilité des runs. Le système V2 et les datasets
+restent figés dans cette version.
