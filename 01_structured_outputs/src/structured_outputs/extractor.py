@@ -29,7 +29,7 @@ apparaître qu'une seule fois et les mots de liaison ou formulations autour
 d'une compétence ne font pas partie de son nom.
 
 Respecte le schéma : utilise null (None en Python) pour les informations absentes
-et une liste vide pour les compétences inconnues."""
+et une liste vide pour les compétences inconnues."""  # noqa: E501
 
 
 class ExtractionError(RuntimeError):

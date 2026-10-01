@@ -171,6 +171,23 @@ rapport n'est écrit. Les tests restent entièrement offline.
 
 ## Développement
 
+Les scores stricts restent disponibles sans changement. Une seconde vue compare
+uniquement `name`, `job_title` et `location` avec `strip().casefold()` : aucune
+équivalence de métier, synonymie ou comparaison floue. La console et le JSON
+incluent aussi la normalized scalar field accuracy (six scalaires, seuls ces
+trois textes changent de comparaison) et le normalized profile exact match.
+Les contrats, nombres (avec les tolérances existantes) et skills gardent leurs règles.
+
+Pour rescoring offline d'un rapport historique, sans API et sans écraser la source :
+
+```powershell
+uv run python -c "from pathlib import Path; from structured_outputs.cli import rescore_report; rescore_report(Path('artifacts/baseline.json'), Path('artifacts/baseline_normalized.json'))"
+```
+
+Cette fonction utilise les profils sauvegardés avec les tolérances nulles par
+défaut, conserve date historique, latences et tokens, et ajoute une date UTC
+`rescored_at`. Les nouvelles métriques ne dépendent pas du prompt courant.
+
 Depuis le dossier `01_structured_outputs` :
 
 ```powershell

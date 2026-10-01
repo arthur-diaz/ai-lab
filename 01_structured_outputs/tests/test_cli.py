@@ -60,8 +60,10 @@ def test_fake_success_and_pipeline(assembled, capsys):
     assert "Benchmark completed" in output
     assert "Examples: 1" in output
     assert "Models: fake-model" in output
-    assert "Profile exact match: 1.0000" in output
-    assert "Scalar field accuracy: 1.0000" in output
+    assert "Strict profile exact match: 1.0000" in output
+    assert "Normalized profile exact match: 1.0000" in output
+    assert "Strict scalar field accuracy: 1.0000" in output
+    assert "Normalized scalar field accuracy: 1.0000" in output
     assert "Skills macro F1: 1.0000" in output
     assert "Mean latency: 0.500 s" in output
     assert "Input tokens (known only): 10" in output
@@ -88,6 +90,8 @@ def test_json_report(assembled, tmp_path):
     assert report["metadata"]["models"] == ["fake-model"]
     metrics = report["metrics"]
     assert metrics["overall_field_accuracy"] == 1
+    assert metrics["normalized_overall_field_accuracy"] == 1
+    assert metrics["normalized_profile_exact_match_accuracy"] == 1
     assert metrics["field_accuracy"]["name"] == 1
     assert metrics["skills_macro_precision"] == metrics["skills_macro_recall"] == 1
     assert metrics["skills_macro_f1"] == metrics["skills_exact_match_accuracy"] == 1
@@ -102,6 +106,8 @@ def test_json_report(assembled, tmp_path):
         == result.examples[0].expected.model_dump()
     )
     assert item["field_matches"]["name"] is True
+    assert item["normalized_field_matches"]["name"] is True
+    assert item["normalized_profile_exact_match"] is True
     assert item["skills_exact_match"] is item["profile_exact_match"] is True
     assert item["skills_precision"] == item["skills_recall"] == item["skills_f1"] == 1
     assert item["latency_seconds"] == 0.5
@@ -175,3 +181,32 @@ def test_output_failure_returns_nonzero(assembled, tmp_path, capsys):
     captured = capsys.readouterr()
     assert "Erreur" in captured.err
     assert "Benchmark completed" not in captured.out
+
+
+def test_offline_rescore_preserves_history(assembled, tmp_path):
+    source = tmp_path / "baseline.json"
+    cli._write_report(assembled[0], source)
+    report = json.loads(source.read_text(encoding="utf-8"))
+    report["examples"][0]["predicted"]["name"] = "marie"
+    source.write_text(json.dumps(report), encoding="utf-8")
+    original = source.read_bytes()
+    output = tmp_path / "rescored.json"
+
+    result = cli.rescore_report(source, output)
+
+    assert source.read_bytes() == original
+    assert result == json.loads(output.read_text(encoding="utf-8"))
+    assert result["metadata"]["generated_at"] == report["metadata"]["generated_at"]
+    assert result["metrics"]["total_input_tokens"] == 10
+    assert result["metrics"]["profile_exact_match_accuracy"] == 0
+    assert result["metrics"]["normalized_profile_exact_match_accuracy"] == 1
+    assert not result["examples"][0]["field_matches"]["name"]
+    assert result["examples"][0]["normalized_field_matches"]["name"]
+    assembled[-1].assert_not_called()
+    assembled[1].create_client.assert_not_called()
+
+
+def test_offline_rescore_rejects_overwriting_source(tmp_path):
+    source = tmp_path / "baseline.json"
+    with pytest.raises(ValueError, match="distinct"):
+        cli.rescore_report(source, source)

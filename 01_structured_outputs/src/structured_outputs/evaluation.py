@@ -14,6 +14,7 @@ SCALAR_FIELDS = (
     "employment_type",
     "target_salary_eur",
 )
+NORMALIZED_TEXT_FIELDS = ("name", "job_title", "location")
 
 
 @dataclass(frozen=True)
@@ -24,6 +25,8 @@ class ProfileEvaluation:
     skills_f1: float
     skills_exact_match: bool
     profile_exact_match: bool
+    normalized_field_matches: dict[str, bool]
+    normalized_profile_exact_match: bool
 
 
 @dataclass(frozen=True)
@@ -36,6 +39,8 @@ class DatasetEvaluation:
     skills_macro_f1: float
     skills_exact_match_accuracy: float
     profile_exact_match_accuracy: float
+    normalized_overall_field_accuracy: float
+    normalized_profile_exact_match_accuracy: float
 
 
 def _validate_tolerance(value: float, name: str) -> None:
@@ -55,6 +60,12 @@ def _numeric_match(
     return abs(predicted - expected) <= tolerance
 
 
+def _normalized_text_match(predicted: str | None, expected: str | None) -> bool:
+    if predicted is None or expected is None:
+        return predicted is expected
+    return predicted.strip().casefold() == expected.strip().casefold()
+
+
 def evaluate_profile(
     predicted: CandidateProfile,
     expected: CandidateProfile,
@@ -62,7 +73,7 @@ def evaluate_profile(
     years_tolerance: float = 0.0,
     salary_tolerance: int = 0,
 ) -> ProfileEvaluation:
-    """Comparer les scalaires et les ensembles de skills, sans renormaliser."""
+    """Scores stricts existants et vue textuelle strip/casefold en parallèle."""
     _validate_tolerance(years_tolerance, "years_tolerance")
     _validate_tolerance(salary_tolerance, "salary_tolerance")
     matches = {
@@ -89,6 +100,12 @@ def evaluate_profile(
         recall = true_positives / len(expected_skills)
         f1 = 2 * true_positives / (len(predicted_skills) + len(expected_skills))
 
+    normalized_matches = {
+        field: _normalized_text_match(
+            getattr(predicted, field), getattr(expected, field)
+        )
+        for field in NORMALIZED_TEXT_FIELDS
+    }
     return ProfileEvaluation(
         field_matches=matches,
         skills_precision=precision,
@@ -96,6 +113,9 @@ def evaluate_profile(
         skills_f1=f1,
         skills_exact_match=exact,
         profile_exact_match=all(matches.values()) and exact,
+        normalized_field_matches=normalized_matches,
+        normalized_profile_exact_match=all({**matches, **normalized_matches}.values())
+        and exact,
     )
 
 
@@ -142,5 +162,14 @@ def evaluate_dataset(
         skills_exact_match_accuracy=sum(score.skills_exact_match for score in scores)
         / count,
         profile_exact_match_accuracy=sum(score.profile_exact_match for score in scores)
+        / count,
+        normalized_overall_field_accuracy=sum(
+            sum({**score.field_matches, **score.normalized_field_matches}.values())
+            for score in scores
+        )
+        / (count * len(SCALAR_FIELDS)),
+        normalized_profile_exact_match_accuracy=sum(
+            score.normalized_profile_exact_match for score in scores
+        )
         / count,
     )

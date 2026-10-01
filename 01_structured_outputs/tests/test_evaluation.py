@@ -3,6 +3,58 @@ import pytest
 from structured_outputs import CandidateProfile, evaluate_dataset, evaluate_profile
 
 
+@pytest.mark.parametrize("field", ["name", "job_title", "location"])
+@pytest.mark.parametrize(
+    "predicted,expected,strict,normalized",
+    [
+        ("Développeur Java", "Développeur Java", True, True),
+        ("Développeur Java", "développeur Java", False, True),
+        ("  Développeur Java  ", "développeur Java", False, True),
+        ("technicien réseau", "technicien réseau en apprentissage", False, False),
+        (None, None, True, True),
+        (None, "Lyon", False, False),
+        ("Lyon", None, False, False),
+    ],
+)
+def test_normalized_text_metrics(field, predicted, expected, strict, normalized):
+    score = evaluate_profile(
+        CandidateProfile(**{field: predicted}), CandidateProfile(**{field: expected})
+    )
+    assert score.field_matches[field] is strict
+    assert score.normalized_field_matches[field] is normalized
+    assert score.profile_exact_match is strict
+    assert score.normalized_profile_exact_match is normalized
+
+
+@pytest.mark.parametrize("difference", ["skills", "salary", "employment"])
+def test_normalized_profile_keeps_other_contracts(difference):
+    expected = CandidateProfile(
+        name="Marie", skills=["Python"], target_salary_eur=50000, employment_type="CDI"
+    )
+    changes = {
+        "skills": {"skills": ["SQL"]},
+        "salary": {"target_salary_eur": 50100},
+        "employment": {"employment_type": "CDD"},
+    }
+    predicted = expected.model_copy(update={"name": "marie", **changes[difference]})
+    score = evaluate_profile(predicted, expected)
+    assert score.normalized_field_matches["name"]
+    assert not score.normalized_profile_exact_match
+    assert not score.profile_exact_match
+
+
+def test_normalized_aggregation_and_numeric_tolerance():
+    expected = CandidateProfile(name="Marie", years_of_experience=4)
+    predicted = CandidateProfile(name="marie", years_of_experience=4.5)
+    score = evaluate_dataset(
+        [(predicted, expected), (expected, expected)], years_tolerance=0.5
+    )
+    assert score.overall_field_accuracy == pytest.approx(11 / 12)
+    assert score.profile_exact_match_accuracy == 0.5
+    assert score.normalized_overall_field_accuracy == 1
+    assert score.normalized_profile_exact_match_accuracy == 1
+
+
 @pytest.fixture
 def complete_profile():
     return CandidateProfile(
