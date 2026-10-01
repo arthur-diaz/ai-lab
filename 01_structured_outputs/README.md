@@ -3,8 +3,9 @@
 Statut : **Work in progress**.
 
 Objectif : extraire des informations structurées depuis du texte avec un LLM
-et Pydantic. Cette première étape fournit uniquement le package Python et les
-outils de développement ; l'intégration LLM viendra ultérieurement.
+et Pydantic. Le modèle `CandidateProfile`, disponible dans
+`structured_outputs.models`, valide et normalise les informations d'un candidat.
+L'intégration LLM viendra ultérieurement.
 
 Stack prévue : Python 3.12, uv, Pydantic v2, pytest et Ruff.
 
