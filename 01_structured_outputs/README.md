@@ -119,6 +119,28 @@ summary = evaluate_dataset([(predicted, expected)])
 print(score.skills_f1, summary.overall_field_accuracy)
 ```
 
+## Benchmark runner
+
+Le flux `dataset -> extraction -> evaluation -> benchmark` reste séparé :
+le loader fournit les exemples, l'extractor produit les profils et métadonnées,
+l'évaluateur mesure la qualité et `run_benchmark(examples, extractor)` orchestre
+le tout. Le runner reçoit un extractor explicitement injecté et ne crée aucun
+client. Il conserve l'ordre des exemples et utilise les métriques existantes
+avec leurs tolérances nulles par défaut.
+
+Le résultat Python contient les résultats individuels et l'évaluation globale.
+Les latences totale et moyenne proviennent des latences d'extraction, retries
+SDK inclus, sans compter le scoring. Les tokens connus sont sommés séparément
+en entrée et en sortie ; un total vaut `None` si aucune valeur n'est disponible.
+En cas de données manquantes, ces totaux sont donc partiels. Le modèle est une
+chaîne s'il est unique, sinon un tuple des modèles distincts dans l'ordre rencontré.
+
+Le runner s'arrête à la première erreur, qu'il propage sans résultat partiel ni
+retry supplémentaire. Un dataset vide provoque un `ValueError`.
+Les tests utilisent un faux extractor, entièrement offline. Aucun benchmark
+réel n'est lancé automatiquement ; son déclenchement manuel reste à l'utilisateur
+après revue. Aucun coût ni export de rapport n'est calculé.
+
 ## Développement
 
 Depuis le dossier `01_structured_outputs` :

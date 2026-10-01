@@ -1,5 +1,6 @@
 """Extraction d'informations structurées sur un candidat."""
 
+from structured_outputs.benchmark import run_benchmark
 from structured_outputs.evaluation import evaluate_dataset, evaluate_profile
 from structured_outputs.extractor import (
     CandidateExtractor,
@@ -15,4 +16,5 @@ __all__ = [
     "ExtractionResult",
     "evaluate_dataset",
     "evaluate_profile",
+    "run_benchmark",
 ]
