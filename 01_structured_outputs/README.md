@@ -9,6 +9,18 @@ et Pydantic. Le modèle `CandidateProfile`, disponible dans
 
 Stack : Python 3.12, uv, Pydantic v2, SDK OpenAI, pytest et Ruff.
 
+## Results
+
+- Development V2 normalized profile exact match : **100 %** (15 exemples).
+- Holdout V2 normalized profile exact match : **92 %** (25 exemples).
+- Holdout V2 skills macro F1 : **100 %**.
+
+Le development set a servi à améliorer le prompt : son score n'est pas une
+estimation indépendante. Le holdout fournit une estimation plus honnête, avec
+les limites d'un petit jeu synthétique et d'une seule exécution.
+Voir le [rapport expérimental](docs/experiment_report.md) pour le protocole,
+la comparaison V1/V2, les erreurs et les trade-offs.
+
 ## Installation
 
 Avec uv installé, depuis la racine de `ai-lab` :
