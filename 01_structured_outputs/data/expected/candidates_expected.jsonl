@@ -1,0 +1,15 @@
+{"id":"candidate_001","expected":{"name":"Camille Verne","job_title":"développeuse backend","years_of_experience":4,"skills":["Python","SQL"],"location":"Lyon","employment_type":"CDI","target_salary_eur":55000}}
+{"id":"candidate_002","expected":{"name":"Noé Brume","job_title":null,"years_of_experience":null,"skills":[],"location":null,"employment_type":null,"target_salary_eur":null}}
+{"id":"candidate_003","expected":{"name":"Salomé Rivage","job_title":"analyste de données","years_of_experience":3,"skills":["SQL","Excel"],"location":"Nantes","employment_type":"CDI","target_salary_eur":null}}
+{"id":"candidate_004","expected":{"name":"Idris Valmont","job_title":"administrateur systèmes","years_of_experience":6,"skills":["Linux","Bash"],"location":null,"employment_type":"CDI","target_salary_eur":48000}}
+{"id":"candidate_005","expected":{"name":"Léna Orbe","job_title":"testeuse logiciel","years_of_experience":2.5,"skills":["pytest","Python"],"location":"Lille","employment_type":"CDI","target_salary_eur":39000}}
+{"id":"candidate_006","expected":{"name":"Milo Serein","job_title":"développeur frontend","years_of_experience":5,"skills":["JavaScript","React"],"location":"Rennes","employment_type":"Freelance","target_salary_eur":null}}
+{"id":"candidate_007","expected":{"name":"Anaïs Lande","job_title":"assistante comptable","years_of_experience":1,"skills":["Excel","Sage"],"location":"Dijon","employment_type":"CDD","target_salary_eur":28000}}
+{"id":"candidate_008","expected":{"name":"Eden Vauclair","job_title":"développeuse web","years_of_experience":0,"skills":["HTML","CSS"],"location":"Toulouse","employment_type":"Internship","target_salary_eur":null}}
+{"id":"candidate_009","expected":{"name":"Jules Avelin","job_title":"technicien réseau","years_of_experience":0,"skills":["Linux"],"location":"Tours","employment_type":"Apprenticeship","target_salary_eur":null}}
+{"id":"candidate_010","expected":{"name":"Zoé Néris","job_title":"développeuse mobile","years_of_experience":7,"skills":["Kotlin","Android"],"location":"Bordeaux","employment_type":"CDI","target_salary_eur":50000}}
+{"id":"candidate_011","expected":{"name":"Oscar Sylve","job_title":"développeur Python","years_of_experience":2,"skills":["Python","SQL"],"location":"Grenoble","employment_type":"CDI","target_salary_eur":null}}
+{"id":"candidate_012","expected":{"name":"Maëlle Solin","job_title":"développeuse backend","years_of_experience":4,"skills":["Python"],"location":"Metz","employment_type":"CDI","target_salary_eur":null}}
+{"id":"candidate_013","expected":{"name":"Nils Aurore","job_title":"développeur Java","years_of_experience":8,"skills":["Java","Spring"],"location":"Strasbourg","employment_type":"CDI","target_salary_eur":52000}}
+{"id":"candidate_014","expected":{"name":"Inès Céladon","job_title":"designer UX","years_of_experience":3,"skills":["Figma"],"location":"Angers","employment_type":"CDI","target_salary_eur":42000}}
+{"id":"candidate_015","expected":{"name":"Sacha Alizé","job_title":null,"years_of_experience":null,"skills":["SQL"],"location":null,"employment_type":null,"target_salary_eur":null}}

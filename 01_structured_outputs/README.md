@@ -61,6 +61,31 @@ les tokens si disponibles, et un coût estimé laissé à `None`.
 Les tests utilisent des clients et transports simulés, sans réseau.
 Aucune CLI n'est disponible à ce stade.
 
+## Dataset synthétique
+
+Les fichiers `data/raw/candidates.jsonl` et
+`data/expected/candidates_expected.jsonl` contiennent 15 profils fictifs,
+associés par des ids stables. Ils serviront à l'évaluation à l'étape suivante ;
+aucune métrique ni exécution de benchmark n'est encore implémentée.
+
+Les annotations distinguent compétences maîtrisées et simplement mentionnées,
+salaire annuel cible et salaire actuel, résidence du candidat et adresse de
+l'entreprise. Les informations absentes, inconnues ou indécidables restent
+`null` (ou `[]` pour les compétences). Les intitulés reprennent le texte,
+y compris le poste recherché lorsqu'il est explicitement indiqué.
+
+```python
+from structured_outputs.dataset import load_evaluation_dataset
+
+examples = load_evaluation_dataset()
+print(examples[0].id, examples[0].expected)
+```
+
+Le loader conserve l'ordre du fichier brut et ignore les lignes blanches.
+Ses chemins par défaut ciblent les données du projet depuis le module, sans
+dépendre du répertoire courant. Pour une installation sans le dossier `data/`,
+fournir explicitement `raw_path` et `expected_path`.
+
 ## Développement
 
 Depuis le dossier `01_structured_outputs` :
