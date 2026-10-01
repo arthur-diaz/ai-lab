@@ -16,12 +16,20 @@ from pydantic import ValidationError
 from structured_outputs.config import AppConfig
 from structured_outputs.models import CandidateProfile
 
-SYSTEM_PROMPT = (
-    "Extrais uniquement les informations explicitement présentes dans le texte. "
-    "N'invente aucune valeur et n'infère aucune compétence absente. "
-    "Respecte le schéma : utilise null (None en Python) pour les informations "
-    "absentes et une liste vide pour les compétences inconnues."
-)
+SYSTEM_PROMPT = """Extrais uniquement les informations explicitement présentes dans le texte.
+N'invente aucune valeur et n'infère aucune compétence absente.
+
+Pour job_title, extrais uniquement l'intitulé du métier ou du poste,
+sans y inclure le type de contrat ou les informations d'emploi qui disposent
+déjà de leur propre champ.
+
+Pour skills, retourne uniquement des noms concis de compétences, technologies,
+outils ou domaines. Les mentions répétées d'une même compétence ne doivent
+apparaître qu'une seule fois et les mots de liaison ou formulations autour
+d'une compétence ne font pas partie de son nom.
+
+Respecte le schéma : utilise null (None en Python) pour les informations absentes
+et une liste vide pour les compétences inconnues."""
 
 
 class ExtractionError(RuntimeError):
