@@ -1,5 +1,6 @@
 """Extraction d'informations structurées sur un candidat."""
 
+from structured_outputs.evaluation import evaluate_dataset, evaluate_profile
 from structured_outputs.extractor import (
     CandidateExtractor,
     ExtractionError,
@@ -12,4 +13,6 @@ __all__ = [
     "CandidateProfile",
     "ExtractionError",
     "ExtractionResult",
+    "evaluate_dataset",
+    "evaluate_profile",
 ]

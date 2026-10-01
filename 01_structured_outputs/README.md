@@ -65,8 +65,8 @@ Aucune CLI n'est disponible à ce stade.
 
 Les fichiers `data/raw/candidates.jsonl` et
 `data/expected/candidates_expected.jsonl` contiennent 15 profils fictifs,
-associés par des ids stables. Ils serviront à l'évaluation à l'étape suivante ;
-aucune métrique ni exécution de benchmark n'est encore implémentée.
+associés par des ids stables. Les métriques permettent de comparer des profils,
+mais le LLM n'est pas encore exécuté automatiquement sur ce dataset.
 
 Les annotations distinguent compétences maîtrisées et simplement mentionnées,
 salaire annuel cible et salaire actuel, résidence du candidat et adresse de
@@ -85,6 +85,39 @@ Le loader conserve l'ordre du fichier brut et ignore les lignes blanches.
 Ses chemins par défaut ciblent les données du projet depuis le module, sans
 dépendre du répertoire courant. Pour une installation sans le dossier `data/`,
 fournir explicitement `raw_path` et `expected_path`.
+
+## Métriques d'évaluation
+
+`evaluate_profile(predicted, expected)` compare les profils déjà normalisés :
+
+- Les six champs scalaires utilisent un exact match, sensible à la casse pour
+  les textes. Deux `None` correspondent ; un seul `None` ne correspond pas.
+- Les nombres acceptent des tolérances absolues inclusives via `years_tolerance`
+  et `salary_tolerance`, nulles par défaut, finies et positives ou nulles.
+- Les skills sont des ensembles comparés sans casse ni prise en compte de
+  l'ordre : précision = TP / prédictions, rappel = TP / attendus,
+  F1 = 2 TP / (nombre de prédictions + nombre d'attendus).
+  Deux ensembles vides obtiennent 1 pour les trois scores ; un seul ensemble
+  vide obtient 0 pour les trois scores.
+- Le skills exact match exige des ensembles identiques. Le profile exact match
+  exige les six scalaires corrects selon les tolérances et le skills exact match.
+
+`evaluate_dataset(pairs)` accepte des couples `(predicted, expected)` sans accès
+aux fichiers. Il retourne l'accuracy par champ, l'overall field accuracy
+(comparaisons correctes / nombre de comparaisons sur les six scalaires, sans
+skills), les skills macro precision / recall / F1 (moyennes par candidat),
+et les accuracies de skills exact match et de profile exact match.
+Un ensemble de couples vide provoque un `ValueError`.
+
+```python
+from structured_outputs import CandidateProfile, evaluate_dataset, evaluate_profile
+
+expected = CandidateProfile(skills=["Python", "SQL"])
+predicted = CandidateProfile(skills=["python"])
+score = evaluate_profile(predicted, expected)
+summary = evaluate_dataset([(predicted, expected)])
+print(score.skills_f1, summary.overall_field_accuracy)
+```
 
 ## Développement
 
