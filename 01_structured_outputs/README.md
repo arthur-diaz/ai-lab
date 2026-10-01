@@ -59,7 +59,7 @@ Un texte vide provoque un `ValueError` local, sans appel API.
 Le résultat contient le modèle retourné, la latence de l'appel (retries inclus),
 les tokens si disponibles, et un coût estimé laissé à `None`.
 Les tests utilisent des clients et transports simulés, sans réseau.
-Aucune CLI n'est disponible à ce stade.
+Une CLI de benchmark manuel est disponible (voir ci-dessous).
 
 ## Dataset synthétique
 
@@ -139,7 +139,35 @@ Le runner s'arrête à la première erreur, qu'il propage sans résultat partiel
 retry supplémentaire. Un dataset vide provoque un `ValueError`.
 Les tests utilisent un faux extractor, entièrement offline. Aucun benchmark
 réel n'est lancé automatiquement ; son déclenchement manuel reste à l'utilisateur
-après revue. Aucun coût ni export de rapport n'est calculé.
+après revue. Aucun coût n'est calculé.
+
+## CLI et rapport JSON
+
+Depuis `01_structured_outputs`, le mode protégé termine avec succès sans créer
+de client ni lire la configuration, même si une clé API est présente :
+
+```powershell
+uv run python -m structured_outputs.cli benchmark
+```
+
+Pour lancer manuellement un vrai benchmark après avoir configuré les variables
+`OPENAI_*` dans l'environnement :
+
+```powershell
+uv run python -m structured_outputs.cli benchmark --run-api --output artifacts/baseline.json
+```
+
+Cette deuxième commande effectue de vrais appels OpenAI et peut consommer des
+crédits API. Aucun benchmark réel n'est déclenché automatiquement ni par les tests.
+Une clé absente ou un échec interrompt la commande avec un code non nul.
+
+La console affiche un résumé et uniquement les ids/champs en désaccord.
+`--output` est facultatif : après un benchmark réussi, il écrit un rapport UTF-8
+avec date UTC, modèles observés, métriques globales, latences, tokens et résultats
+individuels (profils, correspondances et scores). Les répertoires parents sont
+créés si nécessaire ; un fichier existant au même chemin est remplacé.
+Les rapports `artifacts/*.json` sont ignorés par Git. En mode protégé, aucun
+rapport n'est écrit. Les tests restent entièrement offline.
 
 ## Développement
 
