@@ -1,0 +1,25 @@
+{"id":"holdout_001","expected":{"name":"Agathe Montbrun","job_title":"géomaticienne","years_of_experience":4,"skills":["QGIS","SQL"],"location":"Limoges","employment_type":"CDI","target_salary_eur":41000}}
+{"id":"holdout_002","expected":{"name":"Basile Féron","job_title":"ingénieur logiciel senior","years_of_experience":9,"skills":["Rust","Linux"],"location":"Brest","employment_type":null,"target_salary_eur":68000}}
+{"id":"holdout_003","expected":{"name":"Clara Virel","job_title":"chargée de communication","years_of_experience":null,"skills":["Canva","InDesign"],"location":"Reims","employment_type":"CDD","target_salary_eur":null}}
+{"id":"holdout_004","expected":{"name":"Dorian Rosel","job_title":"analyste BI","years_of_experience":null,"skills":["Power BI"],"location":"Nancy","employment_type":"CDI","target_salary_eur":null}}
+{"id":"holdout_005","expected":{"name":"Élise Torval","job_title":null,"years_of_experience":null,"skills":["Git","Bash"],"location":null,"employment_type":null,"target_salary_eur":null}}
+{"id":"holdout_006","expected":{"name":"Farid Norelle","job_title":"bibliothécaire","years_of_experience":12,"skills":[],"location":"Rouen","employment_type":null,"target_salary_eur":null}}
+{"id":"holdout_007","expected":{"name":"Gaëlle Perlin","job_title":"comptable","years_of_experience":null,"skills":["Excel","Sage"],"location":null,"employment_type":null,"target_salary_eur":34000}}
+{"id":"holdout_008","expected":{"name":"Hugo Valcer","job_title":"ingénieur cloud","years_of_experience":null,"skills":["Docker","AWS"],"location":"Annecy","employment_type":"Freelance","target_salary_eur":null}}
+{"id":"holdout_009","expected":{"name":"Iris Dalmont","job_title":"statisticienne","years_of_experience":2.5,"skills":["R"],"location":"Poitiers","employment_type":null,"target_salary_eur":null}}
+{"id":"holdout_010","expected":{"name":"Jonas Mérial","job_title":"rédacteur technique","years_of_experience":null,"skills":["Markdown","Git"],"location":null,"employment_type":"CDI","target_salary_eur":null}}
+{"id":"holdout_011","expected":{"name":"Katia Bréval","job_title":"administratrice de bases de données","years_of_experience":6,"skills":["PostgreSQL","DBeaver"],"location":"Orléans","employment_type":null,"target_salary_eur":null}}
+{"id":"holdout_012","expected":{"name":"Loïc Arven","job_title":"assistant marketing","years_of_experience":0,"skills":[],"location":null,"employment_type":"Internship","target_salary_eur":null}}
+{"id":"holdout_013","expected":{"name":"Mina Dorcel","job_title":"technicienne support","years_of_experience":null,"skills":["Windows","Linux"],"location":"Amiens","employment_type":"Apprenticeship","target_salary_eur":null}}
+{"id":"holdout_014","expected":{"name":"Nadir Solven","job_title":"graphiste","years_of_experience":5,"skills":["Figma","Illustrator","Photoshop"],"location":"Avignon","employment_type":null,"target_salary_eur":null}}
+{"id":"holdout_015","expected":{"name":"Océane Falcor","job_title":"développeuse embarquée","years_of_experience":3,"skills":["C","C++"],"location":null,"employment_type":"Freelance","target_salary_eur":null}}
+{"id":"holdout_016","expected":{"name":"Pavel Lior","job_title":"documentaliste","years_of_experience":null,"skills":["Zotero"],"location":null,"employment_type":"CDD","target_salary_eur":null}}
+{"id":"holdout_017","expected":{"name":"Quitterie Auvrel","job_title":"cheffe de projet junior","years_of_experience":1.5,"skills":["Jira"],"location":null,"employment_type":"CDI","target_salary_eur":37500}}
+{"id":"holdout_018","expected":{"name":"Rémi Caster","job_title":"ingénieur qualité","years_of_experience":null,"skills":["ISO 9001"],"location":"Besançon","employment_type":null,"target_salary_eur":49000}}
+{"id":"holdout_019","expected":{"name":"Sonia Asterel","job_title":"développeuse iOS","years_of_experience":4,"skills":["Swift"],"location":null,"employment_type":null,"target_salary_eur":46000}}
+{"id":"holdout_020","expected":{"name":"Théo Brenor","job_title":"ingénieur sécurité","years_of_experience":null,"skills":["Wireshark"],"location":null,"employment_type":null,"target_salary_eur":null}}
+{"id":"holdout_021","expected":{"name":"Uma Cérandel","job_title":"traductrice","years_of_experience":null,"skills":["Trados"],"location":"Caen","employment_type":null,"target_salary_eur":null}}
+{"id":"holdout_022","expected":{"name":"Valentin Ordel","job_title":"développeur web","years_of_experience":7,"skills":["TypeScript","Vue.js"],"location":"Perpignan","employment_type":"CDI","target_salary_eur":null}}
+{"id":"holdout_023","expected":{"name":"Wendy Lorcal","job_title":"assistante de recherche","years_of_experience":null,"skills":["MATLAB"],"location":null,"employment_type":"Internship","target_salary_eur":null}}
+{"id":"holdout_024","expected":{"name":"Yanis Pradel","job_title":null,"years_of_experience":null,"skills":[],"location":null,"employment_type":null,"target_salary_eur":null}}
+{"id":"holdout_025","expected":{"name":"Zélie Marvane","job_title":"testeuse QA","years_of_experience":null,"skills":["Selenium","SQL"],"location":"Chambéry","employment_type":"CDD","target_salary_eur":32000}}

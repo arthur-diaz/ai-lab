@@ -6,7 +6,7 @@ import pytest
 
 from structured_outputs import CandidateProfile, ExtractionError, ExtractionResult, cli
 from structured_outputs.benchmark import run_benchmark
-from structured_outputs.dataset import EvaluationExample
+from structured_outputs.dataset import DATA_DIR, EvaluationExample
 
 
 @pytest.fixture
@@ -210,3 +210,35 @@ def test_offline_rescore_rejects_overwriting_source(tmp_path):
     source = tmp_path / "baseline.json"
     with pytest.raises(ValueError, match="distinct"):
         cli.rescore_report(source, source)
+
+
+def test_explicit_development_dataset(assembled):
+    assert cli.main(["benchmark", "--dataset", "development", "--run-api"]) == 0
+    assembled[-2].assert_called_once_with()
+
+
+def test_holdout_dataset_paths(assembled):
+    assert cli.main(["benchmark", "--dataset", "holdout", "--run-api"]) == 0
+    assembled[-2].assert_called_once_with(
+        raw_path=DATA_DIR / "holdout" / "raw" / "candidates.jsonl",
+        expected_path=DATA_DIR / "holdout" / "expected" / "candidates_expected.jsonl",
+    )
+
+
+def test_invalid_dataset_rejected(assembled):
+    with pytest.raises(SystemExit) as error:
+        cli.main(["benchmark", "--dataset", "invalid"])
+    assert error.value.code == 2
+    assembled[1].create_client.assert_not_called()
+    assembled[-1].assert_not_called()
+
+
+def test_holdout_dry_run_no_assembly(assembled, monkeypatch, capsys):
+    monkeypatch.setenv("OPENAI_API_KEY", "unused-test-key")
+    assert cli.main(["benchmark", "--dataset", "holdout"]) == 0
+    output = capsys.readouterr().out
+    assert "mode protégé" in output
+    assert "Dataset: holdout" in output
+    assembled[1].create_client.assert_not_called()
+    assembled[-2].assert_not_called()
+    assembled[-1].assert_not_called()

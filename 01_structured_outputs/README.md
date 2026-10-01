@@ -169,6 +169,47 @@ créés si nécessaire ; un fichier existant au même chemin est remplacé.
 Les rapports `artifacts/*.json` sont ignorés par Git. En mode protégé, aucun
 rapport n'est écrit. Les tests restent entièrement offline.
 
+## Development dataset et Holdout dataset
+
+Le **development set** contient les 15 exemples historiques. Leurs erreurs ont
+servi à améliorer le prompt : les scores V2 sur ce jeu ne sont donc plus une
+estimation indépendante de généralisation. Il reste le dataset par défaut
+(`--dataset development`).
+
+Le **holdout set** contient 25 nouveaux exemples synthétiques dans
+`data/holdout/raw/` et `data/holdout/expected/`, avec des ids `holdout_001` à
+`holdout_025` et aucun candidat partagé. Il varie les métiers, séniorités,
+contrats, compétences attribuées ou exclues, durées, salaires et résidences.
+Les informations absentes ou indécidables restent `null`. Les valeurs sont
+explicites ; aucune conversion de tarif journalier en salaire n'est effectuée.
+
+Convention d'annotation : si un poste actuel et un poste futur recherché sont
+tous deux nommés, `job_title` retient le poste actuel. Si seul le poste recherché
+est fourni, cet intitulé est retenu, comme dans le development set. Le schéma
+et le prompt V2 ne fixent pas explicitement cette priorité ; cette convention
+est documentée pour rendre le cas `holdout_004` interprétable, sans changer V2.
+
+Le holdout n'a pas servi à ajuster le prompt avant son premier benchmark.
+La V2 est gelée pendant sa préparation : cette séparation limite le risque
+d'overfitting au benchmark. Après analyse et ajustement sur ce holdout, il ne
+devra plus être présenté comme un test indépendant.
+
+Mode protégé, sans appel API :
+
+```powershell
+uv run python -m structured_outputs.cli benchmark --dataset holdout
+```
+
+Premier benchmark holdout, à lancer manuellement après revue uniquement :
+
+```powershell
+uv run --env-file .env python -m structured_outputs.cli benchmark --dataset holdout --run-api --output artifacts/holdout_v2.json
+```
+
+Cette commande charge `.env` via uv et effectue de vrais appels OpenAI qui peuvent
+consommer des crédits API. Aucun passage réel sur le holdout n'a été lancé lors
+de sa préparation. Le loader existant est réutilisé avec des chemins personnalisés.
+
 ## Développement
 
 Les scores stricts restent disponibles sans changement. Une seconde vue compare

@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from structured_outputs.benchmark import BenchmarkResult, run_benchmark
 from structured_outputs.config import AppConfig
-from structured_outputs.dataset import load_evaluation_dataset
+from structured_outputs.dataset import DATA_DIR, load_evaluation_dataset
 from structured_outputs.evaluation import evaluate_dataset, evaluate_profile
 from structured_outputs.extractor import CandidateExtractor, ExtractionError
 from structured_outputs.models import CandidateProfile
@@ -127,19 +127,35 @@ def main(argv: list[str] | None = None) -> int:
         "--run-api", action="store_true", help="Autoriser les appels OpenAI réels"
     )
     benchmark.add_argument("--output", type=Path, help="Chemin du rapport JSON")
+    benchmark.add_argument(
+        "--dataset",
+        choices=["development", "holdout"],
+        default="development",
+        help="Jeu à évaluer (development par défaut)",
+    )
     args = parser.parse_args(argv)
     if not args.run_api:
         print(
             "Dry run / mode protégé : aucun appel API. "
             "Utilisez --run-api pour lancer le benchmark réel."
         )
+        print(f"Dataset: {args.dataset}")
         return 0
     try:
         config = AppConfig.from_env()
         # create_client valide la clé ; le contexte ferme le client même en échec.
         with config.create_client() as client:
             extractor = CandidateExtractor(client=client, config=config)
-            examples = load_evaluation_dataset()
+            if args.dataset == "holdout":
+                examples = load_evaluation_dataset(
+                    raw_path=DATA_DIR / "holdout" / "raw" / "candidates.jsonl",
+                    expected_path=DATA_DIR
+                    / "holdout"
+                    / "expected"
+                    / "candidates_expected.jsonl",
+                )
+            else:
+                examples = load_evaluation_dataset()
             result = run_benchmark(examples=examples, extractor=extractor)
         if args.output is not None:
             _write_report(result, args.output)
