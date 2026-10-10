@@ -4,7 +4,7 @@
 
 Explorer et évaluer la recherche lexicale et la recherche sémantique avec
 embeddings sur un petit corpus documentaire. Le package et le dataset sont
-prêts ; aucun moteur de recherche n'est encore implémenté.
+prêts, avec une première baseline lexicale TF-IDF.
 
 ## Questions étudiées
 
@@ -15,7 +15,7 @@ prêts ; aucun moteur de recherche n'est encore implémenté.
 
 ## Stack
 
-Python 3.12, uv, Hatchling, pytest et Ruff. Aucune dépendance applicative.
+Python 3.12, uv, Hatchling, scikit-learn, pytest et Ruff.
 Le package `embeddings_search` utilise un layout `src`.
 
 ## Installation
@@ -67,6 +67,34 @@ Les données restent dans le dépôt et ne sont pas embarquées dans le wheel.
 Les loaders lèvent `DatasetError` pour les fichiers invalides, champs manquants,
 doublons, références inconnues ou grades invalides.
 
+## Baseline lexicale
+
+`LexicalSearchEngine` construit une fois l'index TF-IDF sur le titre et le corps
+de chaque document, sans pondération particulière. `TfidfVectorizer` utilise
+ses réglages standard, dont la conversion en minuscules ; aucun stemming,
+synonyme ou stopword personnalisé n'est ajouté.
+
+Chaque requête est transformée avec le même vocabulaire, puis comparée aux
+documents par similarité cosinus. Les résultats sont triés par score décroissant,
+avec des rangs commençant à 1. Les égalités conservent l'ordre du corpus.
+
+```python
+from embeddings_search import LexicalSearchEngine
+from embeddings_search.dataset import load_corpus
+
+engine = LexicalSearchEngine(load_corpus())
+for result in engine.search("comment changer mon mot de passe ?", top_k=5):
+    print(result.rank, result.document.id, result.score)
+```
+
+Le corpus vide ou sans terme indexable est refusé à l'initialisation. Une requête
+blanche et un `top_k` qui n'est pas un entier strictement positif lèvent
+`ValueError`. Un `top_k` supérieur au corpus retourne tous les documents. Sans
+terme commun, les scores sont nuls et l'ordre du corpus est conservé : un résultat
+retourné n'est donc pas nécessairement pertinent.
+
+Aucune métrique globale ni comparaison avec les embeddings n'est encore calculée.
+
 ## Validation
 
 Depuis `02_embeddings_search`, sans appel API :
@@ -80,5 +108,5 @@ uv run python -c "import embeddings_search; print(embeddings_search.__name__)"
 
 ## Statut
 
-Work in progress. Corpus, requêtes, annotations et loaders disponibles.
-Aucun retrieval, embedding, métrique ou benchmark implémenté.
+Work in progress. Corpus, requêtes, annotations, loaders et baseline TF-IDF
+disponibles. Aucun embedding, moteur sémantique, métrique ou benchmark implémenté.
