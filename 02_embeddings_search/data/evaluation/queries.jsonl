@@ -1,0 +1,20 @@
+{"id":"query_001","text":"Comment réinitialiser mon mot de passe oublié ?"}
+{"id":"query_002","text":"J'ai changé de portable et je n'ai plus les six chiffres demandés après mon identifiant. Comment rentrer dans mon compte ?"}
+{"id":"query_003","text":"Nous voulons que les salariés passent par notre annuaire d'entreprise pour entrer, avec une deuxième preuve d'identité obligatoire. Que configurer ?"}
+{"id":"query_004","text":"Je suis parti d'un poste partagé en laissant Noria ouvert. Comment couper à distance la connexion de ce navigateur ?"}
+{"id":"query_005","text":"Quel rôle donner à un auditeur externe qui doit consulter nos projets sans pouvoir les modifier ?"}
+{"id":"query_006","text":"Deux équipes doivent avoir des projets invisibles l'une pour l'autre, mais une seule facture. Comment organiser cela ?"}
+{"id":"query_007","text":"Une collègue quitte l'entreprise : comment lui enlever tous ses accès sans perdre les projets qu'elle a créés ?"}
+{"id":"query_008","text":"Où télécharger mes factures PDF ?"}
+{"id":"query_009","text":"Le justificatif du mois dernier porte notre ancienne raison sociale. Puis-je le corriger, et éviter le problème le mois prochain ?"}
+{"id":"query_010","text":"Je veux passer à une formule moins chère : est-ce immédiat et vais-je récupérer une partie de ce que j'ai payé ?"}
+{"id":"query_011","text":"On arrête le service à la prochaine échéance, mais je dois d'abord emporter une copie de nos projets et fichiers. Que faire ?"}
+{"id":"query_012","text":"Je vois deux débits pour le même mois sur le relevé, pourriez-vous nous rendre celui en trop ?"}
+{"id":"query_013","text":"L'API renvoie HTTP 429. Combien de temps attendre avant de recommencer ?"}
+{"id":"query_014","text":"Mon script ne reçoit que les cinquante premiers projets alors qu'il y en a davantage. Comment obtenir la suite ?"}
+{"id":"query_015","text":"Nous devons avertir notre application dès qu'un projet change, et vérifier que le message vient bien de Noria. Comment faire ?"}
+{"id":"query_016","text":"Notre récepteur a créé deux tâches pour la même modification après une panne. Comment empêcher ce doublon à la prochaine tentative ?"}
+{"id":"query_017","text":"Je voudrais moins de courriels pour les échéances, mais les annonces dans le canal de l'équipe doivent continuer. Quel réglage changer ?"}
+{"id":"query_018","text":"J'ai jeté un projet hier par erreur. Puis-je le remettre avec ses pièces jointes sans demander une reprise de tout le service ?"}
+{"id":"query_019","text":"Avant de signer, notre juriste demande les engagements sur les informations personnelles, les sociétés qui les traitent et le pays de stockage. Où les trouver ?"}
+{"id":"query_020","text":"Oups, le secret de notre script s'est retrouvé dans un dépôt public. Faut-il changer mon mot de passe ou faire autre chose pour bloquer son utilisation ?"}
